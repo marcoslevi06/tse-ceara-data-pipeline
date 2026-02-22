@@ -3,19 +3,17 @@ import io
 
 def transformar_silver_para_gold(buffer_silver: io.BytesIO) -> pd.DataFrame:
     """
-    Agrega os dados da Silver para criar uma visão de resultados por município.
+        Agrega os dados da Silver para criar uma visão de resultados por município.
     """
     # 1. Leitura do dado limpo
     df = pd.read_parquet(buffer_silver)
 
     # 2. Agregação Principal: Votos por Candidato/Cargo por Município
-    # Agrupamos eliminando a granularidade de 'Seção' e 'Zona'
     gold_df = df.groupby(
         ['ANO_ELEICAO', 'NR_TURNO', 'SG_UF', 'NM_MUNICIPIO', 'DS_CARGO', 'NM_VOTAVEL', 'TP_VOTO']
     )['QT_VOTOS'].sum().reset_index()
 
     # 3. Cálculo de Percentual de Votos Válidos por Cidade/Cargo
-    # Filtramos apenas votos nominais para o cálculo de participação
     total_validos = gold_df[gold_df['TP_VOTO'] == 'NOMINAL'].groupby(['NM_MUNICIPIO', 'DS_CARGO'])['QT_VOTOS'].transform('sum')
     
     # Criamos a métrica de share (proporção)
